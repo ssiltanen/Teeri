@@ -1,0 +1,40 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+
+    <!-- General -->
+    <AssemblyName>Teeri</AssemblyName>
+    <Description>Thin F# wrapper for Azure Blob Storage .NET SDK </Description>
+    <Authors>Sampo Siltanen</Authors>
+    
+    <!-- Build settings -->
+    <TargetFramework>net5.0</TargetFramework>
+    <DebugType>portable</DebugType>
+    <OutputType>Library</OutputType>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+
+    <!-- NuGet Pack settings -->
+    <PackageId>Teeri</PackageId>
+    <PackageIcon>Logo.png</PackageIcon>
+    <PackageTags>fsharp;azure;storage</PackageTags>
+    <PackageReleaseNotes>https://raw.githubusercontent.com/ssiltanen/Teeri/master/RELEASE_NOTES.md</PackageReleaseNotes>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+    <RepositoryType>git</RepositoryType>
+    <RepositoryUrl>https://github.com/ssiltanen/Teeri</RepositoryUrl>
+
+    <!-- SourceLink settings 
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat> -->
+
+  </PropertyGroup>
+  
+  <ItemGroup>
+    <Compile Include="Teeri.fs" />
+    <Compile Include="Builder.fs" />
+    <None Include="..\..\Logo.png" Pack="true" PackagePath="\"/>
+    <None Include="..\..\LICENSE" Pack="true" PackagePath="\"/>
+  </ItemGroup>
+
+  <Import Project="..\..\.paket\Paket.Restore.targets" />
+</Project>
