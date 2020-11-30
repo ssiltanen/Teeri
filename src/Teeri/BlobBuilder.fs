@@ -1,21 +1,30 @@
 [<AutoOpen>]
-module Teeri.Builder
+module Teeri.BlobBuilder
 
 open System
+open System.Threading
 open System.Collections.Generic
 open Azure.Storage.Blobs.Models
 
-type BlobBuilder () =
+type BlobBuilder (path: string, content: BlobContent) =
 
-    member _.Yield _ =
-        { HttpHeaders = BlobHttpHeaders()
-          UploadOptions = BlobUploadOptions() }
+    member _.Yield path content =
+        { Path = path
+          Content = content
+          HttpHeaders = BlobHttpHeaders()
+          UploadOptions = BlobUploadOptions()
+          CancellationToken = CancellationToken.None }
 
     /// Specify directives for caching mechanisms.
     [<CustomOperation"cacheControl">]
     member _.CacheControl(state: Blob, cacheControl) =
         state.HttpHeaders.CacheControl <- cacheControl
         state
+
+    /// Optional System.Threading.CancellationToken to propagate notifications that the operation should be cancelled.
+    [<CustomOperation"cancellationToken">]
+    member _.CancellationToken(state: Blob, token) =
+        { state with CancellationToken = token }
 
     /// Conveys additional information about how to process the response payload, and also can be used to attach additional metadata.
     /// For example, if set to attachment, it indicates that the user-agent should not display the response,
@@ -29,8 +38,8 @@ type BlobBuilder () =
     /// This value is returned to the client when the Get Blob operation is performed on the blob resource.
     /// The client can use this value when returned to decode the blob content.
     [<CustomOperation"contentEncoding">]
-    member _.ContentEncoding(state: Blob, encoding) =
-        state.HttpHeaders.ContentEncoding <- encoding
+    member _.ContentEncoding(state: Blob, encoding: ContentEncoding) =
+        state.HttpHeaders.ContentEncoding <- encoding.Value
         state
 
     /// An MD5 hash of the blob content.
@@ -100,4 +109,4 @@ type BlobBuilder () =
         state.UploadOptions.TransferOptions <- transferOptions
         state
 
-let blob = BlobBuilder ()
+let blob path content = BlobBuilder(path, content)
