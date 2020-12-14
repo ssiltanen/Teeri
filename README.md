@@ -1,7 +1,7 @@
 # Teeri
 
 <p align="center">
-<img src="https://github.com/ssiltanen/Teeri/raw/master/Logo.png" width="200px"/>
+<img src="https://raw.githubusercontent.com/ssiltanen/Teeri/main/Logo.png" width="200px"/>
 </p>
 
 Teeri is a simple F# wrapper on top of Azure Blob Storage .NET SDK. Teeri aims at making uploading and downloading blobs simpler and to abstract away the unnecessary details of the underlaying SDK.
