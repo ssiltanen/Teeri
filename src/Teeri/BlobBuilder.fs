@@ -75,7 +75,7 @@ type BlobBuilder (path: string, content: BlobContent) =
         state.UploadOptions.Conditions <- conditions
         state
 
-    /// Optional custom metadata to set for this append blob.
+    /// Optional custom metadata to set for this blob.
     /// Call this only once in a builder since it overwrites previous values on consecutive calls.
     [<CustomOperation"metadata">]
     member _.Metadata(state: Blob, metadata) =
@@ -86,8 +86,8 @@ type BlobBuilder (path: string, content: BlobContent) =
         state.UploadOptions.Metadata <- dictionary
         state
 
-    /// Optional System.IProgress1` to provide progress updates about data transfers.
-    [<CustomOperation"ProgressHandler">]
+    /// Optional System.IProgress<int64> to provide progress updates about data transfers.
+    [<CustomOperation"progressHandler">]
     member _.ProgressHandler(state: Blob, progress) =
         state.UploadOptions.ProgressHandler <- progress
         state
@@ -103,7 +103,7 @@ type BlobBuilder (path: string, content: BlobContent) =
         state.UploadOptions.Tags <- dictionary
         state
 
-    /// Options tags to set for this block blob.
+    /// Optional Azure.Storage.StorageTransferOptions to configure parallel transfer behavior.
     [<CustomOperation"transferOptions">]
     member _.TransferOptions(state: Blob, transferOptions) =
         state.UploadOptions.TransferOptions <- transferOptions

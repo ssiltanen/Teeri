@@ -63,17 +63,58 @@ module Blob =
 
     let downloadAsync (client : BlobClient) (blob : ReadBlob) =
         task {
+            let! properties = client.GetPropertiesAsync(blob.BlobRequestConditions, blob.CancellationToken)
+            let encoding =
+                match Option.ofObj properties.Value.ContentEncoding with
+                | Some enc when enc = ASCII.Value -> Text.Encoding.ASCII
+                | Some enc when enc = BigEndianUnicode.Value -> Text.Encoding.BigEndianUnicode
+                | Some enc when enc = Latin1.Value -> Text.Encoding.Latin1
+                | Some enc when enc = Unicode.Value -> Text.Encoding.Unicode
+                | Some enc when enc = UTF32.Value -> Text.Encoding.UTF32
+                | Some enc when enc = UTF8.Value -> Text.Encoding.UTF8
+                | Some enc when enc = Default.Value -> Text.Encoding.Default
+                | Some _
+                | None -> Text.Encoding.UTF8
             use! stream = openReadAsync client blob
-            use streamReader = new StreamReader(stream)
+            use streamReader = new StreamReader(stream, encoding)
             // Task is awaited here to make sure stream isnt disposed too early
             let! content = streamReader.ReadToEndAsync()
             return content
         }
 
     let download (client : BlobClient) (blob : ReadBlob) =
-        use stream = openRead client blob
-        use streamReader = new StreamReader(stream)
-        streamReader.ReadToEnd()
+        downloadAsync client blob
+        |> Async.AwaitTask
+        |> Async.RunSynchronously
+
+    module Sas =
+
+        let createSharedKeyCredential (connectionString: string) =
+            let connStringPairs =
+                connectionString.Split ';'
+                |> Array.map (fun value ->
+                    match value.Split '=' |> Array.toList with
+                    | head :: tail -> head, String.concat "=" tail
+                    | _ -> failwith "Invalid connection string value pair")
+
+            let getValue key =
+                connStringPairs
+                |> Array.tryPick (fun (name,value) -> if name = key then Some value else None)
+                |> Option.defaultWith (fun _ -> failwithf "Key %s was not found from connection string" key)
+
+            let account = getValue "AccountName"
+            let key = getValue "AccountKey"
+
+            StorageSharedKeyCredential(account, key)
+
+        let generateBlobSas container blob startsOn expiresOn (permissions: BlobSasPermissions) sharedKeyCredential =
+            let builder = BlobSasBuilder()
+            builder.BlobContainerName <- container
+            builder.BlobName <- blob
+            builder.StartsOn <- startsOn
+            builder.ExpiresOn <- expiresOn
+            builder.SetPermissions permissions
+            builder.ToSasQueryParameters sharedKeyCredential
 
 module Container =
 
@@ -104,32 +145,3 @@ module Container =
 
     let downloadBlob (container: BlobContainerClient) (blob: ReadBlob) =
         Blob.download (container.GetBlobClient(blob.Path)) blob
-
-module Sas =
-
-    let createSharedKeyCredential (connectionString: string) =
-        let connStringPairs =
-            connectionString.Split ';'
-            |> Array.map (fun value ->
-                match value.Split '=' |> Array.toList with
-                | head :: tail -> head, String.concat "=" tail
-                | _ -> failwith "Invalid connection string value pair")
-
-        let getValue key =
-            connStringPairs
-            |> Array.tryPick (fun (name,value) -> if name = key then Some value else None)
-            |> Option.defaultWith (fun _ -> failwithf "Key %s was not found from connection string" key)
-
-        let account = getValue "AccountName"
-        let key = getValue "AccountKey"
-
-        StorageSharedKeyCredential(account, key)
-
-    let generateBlobSas container blob startsOn expiresOn (permissions: BlobSasPermissions) sharedKeyCredential =
-        let builder = BlobSasBuilder()
-        builder.BlobContainerName <- container
-        builder.BlobName <- blob
-        builder.StartsOn <- startsOn
-        builder.ExpiresOn <- expiresOn
-        builder.SetPermissions permissions
-        builder.ToSasQueryParameters sharedKeyCredential

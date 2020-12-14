@@ -2,8 +2,6 @@
 
 open System.IO
 open System.Threading
-open Azure.Storage
-open Azure.Storage.Blobs
 open Azure.Storage.Blobs.Models
 
 type ContentEncoding = ASCII | BigEndianUnicode | Latin1 | Unicode | UTF32 | UTF8 | Default with
