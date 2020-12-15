@@ -196,7 +196,7 @@ Synchronous version of `downloadBlobAsync`.
 
 ## Help! Teeri does not support my use case
 
-Using Teeri does not exclude the possibility of using the underlying SDK without Teeri. In fact, Teeri positions itself ss a helper DSL. If a feature is missing that would make developer life easier, check out how to contribute your ideas to Teeri.
+Using Teeri does not exclude the possibility of using the underlying SDK without Teeri. In fact, Teeri positions itself as a helper DSL. If a feature is missing that would make developer life easier, check out how to contribute your ideas to Teeri.
 
 ## Contributions
 
