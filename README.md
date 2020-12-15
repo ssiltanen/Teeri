@@ -21,7 +21,7 @@ blob ("folder/file.txt", FromStream stream) {
     accessTier AccessTier.Cool
     conditions blobRequestConditions
     metadata [ "meta1", "value"; "meta2", "value" ]
-    ProgressHandler iprogress
+    progressHandler iprogress
     tags [ "tag1", "value"; "tag2", "value" ]
     transferOptions transferOptions
 } |> uploadAsync blobClient
