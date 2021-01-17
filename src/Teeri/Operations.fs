@@ -5,19 +5,18 @@ open System
 open System.IO
 open Azure.Storage
 open Azure.Storage.Blobs
-open Azure.Storage.Sas
 open FSharp.Control.Tasks
 
 module Blob =
 
-    let internal uploadStreamAsync (client: BlobClient) (stream: Stream) (blob: Blob) =
+    let internal uploadStreamAsync (client: BlobClient) (stream: Stream) (blob: UploadBlob) =
         task {
             blob.UploadOptions.HttpHeaders <- blob.HttpHeaders
             let! response = client.UploadAsync(stream, blob.UploadOptions, blob.CancellationToken)
             return response.Value
         }
 
-    let internal uploadStringAsync (client: BlobClient) (content: string) (blob: Blob) =
+    let internal uploadStringAsync (client: BlobClient) (content: string) (blob: UploadBlob) =
         task {
             let bytes =
                 match Option.ofObj blob.HttpHeaders.ContentEncoding with
@@ -41,27 +40,27 @@ module Blob =
 
     /// When uploading string content, uses content encoding value from Blob builder to determine how string is encoded.
     /// If no value is provided, defaults to UTF8.
-    let uploadAsync (client: BlobClient) (blob: Blob) =
+    let uploadAsync (client: BlobClient) (blob: UploadBlob) =
         match blob.Content with
         | FromStream stream -> uploadStreamAsync client stream blob
         | FromString str -> uploadStringAsync client str blob
 
     /// When uploading string content, uses content encoding value from Blob builder to determine how string is encoded.
     /// If no value is provided, defaults to UTF8.
-    let upload (client: BlobClient) (blob: Blob) =
+    let upload (client: BlobClient) (blob: UploadBlob) =
         match blob.Content with
         | FromStream stream -> uploadStreamAsync client stream blob
         | FromString str -> uploadStringAsync client str blob
         |> Async.AwaitTask
         |> Async.RunSynchronously
 
-    let openReadAsync (client : BlobClient) (blob : ReadBlob) =
+    let openReadAsync (client : BlobClient) (blob : DownloadBlob) =
         client.OpenReadAsync(blob.Position, (Option.toNullable blob.BufferSize), blob.BlobRequestConditions, blob.CancellationToken)
 
-    let openRead (client : BlobClient) (blob : ReadBlob) =
+    let openRead (client : BlobClient) (blob : DownloadBlob) =
         client.OpenRead(blob.Position, (Option.toNullable blob.BufferSize), blob.BlobRequestConditions, blob.CancellationToken)
 
-    let downloadAsync (client : BlobClient) (blob : ReadBlob) =
+    let downloadAsync (client : BlobClient) (blob : DownloadBlob) =
         task {
             let! properties = client.GetPropertiesAsync(blob.BlobRequestConditions, blob.CancellationToken)
             let encoding =
@@ -82,7 +81,7 @@ module Blob =
             return content
         }
 
-    let download (client : BlobClient) (blob : ReadBlob) =
+    let download (client : BlobClient) (blob : DownloadBlob) =
         downloadAsync client blob
         |> Async.AwaitTask
         |> Async.RunSynchronously
@@ -92,9 +91,9 @@ module Blob =
         let createSharedKeyCredential (connectionString: string) =
             let connStringPairs =
                 connectionString.Split ';'
-                |> Array.map (fun value ->
-                    match value.Split '=' |> Array.toList with
-                    | head :: tail -> head, String.concat "=" tail
+                |> Array.map (fun pair ->
+                    match pair.Split '=' with
+                    | [| name; value |] -> name, value
                     | _ -> failwith "Invalid connection string value pair")
 
             let getValue key =
@@ -102,46 +101,34 @@ module Blob =
                 |> Array.tryPick (fun (name,value) -> if name = key then Some value else None)
                 |> Option.defaultWith (fun _ -> failwithf "Key %s was not found from connection string" key)
 
-            let account = getValue "AccountName"
-            let key = getValue "AccountKey"
-
-            StorageSharedKeyCredential(account, key)
-
-        let generateBlobSas container blob startsOn expiresOn (permissions: BlobSasPermissions) sharedKeyCredential =
-            let builder = BlobSasBuilder()
-            builder.BlobContainerName <- container
-            builder.BlobName <- blob
-            builder.StartsOn <- startsOn
-            builder.ExpiresOn <- expiresOn
-            builder.SetPermissions permissions
-            builder.ToSasQueryParameters sharedKeyCredential
+            StorageSharedKeyCredential(getValue "AccountName", getValue "AccountKey")
 
 module Container =
 
     /// When uploading string content, uses content encoding value from Blob builder to determine how string is encoded.
     /// If no value is provided, defaults to UTF8.
-    let uploadBlobAsync (container: BlobContainerClient) (blob: Blob) =
+    let uploadBlobAsync (container: BlobContainerClient) (blob: UploadBlob) =
         match blob.Content with
         | FromStream stream -> Blob.uploadStreamAsync (container.GetBlobClient(blob.Path)) stream blob
         | FromString str -> Blob.uploadStringAsync (container.GetBlobClient(blob.Path)) str blob
 
     /// When uploading string content, uses content encoding value from Blob builder to determine how string is encoded.
     /// If no value is provided, defaults to UTF8.
-    let uploadBlob (container: BlobContainerClient) (blob: Blob) =
+    let uploadBlob (container: BlobContainerClient) (blob: UploadBlob) =
         match blob.Content with
         | FromStream stream -> Blob.uploadStreamAsync (container.GetBlobClient(blob.Path)) stream blob
         | FromString str -> Blob.uploadStringAsync (container.GetBlobClient(blob.Path)) str blob
         |> Async.AwaitTask
         |> Async.RunSynchronously
 
-    let openReadblobAsync (container: BlobContainerClient) (blob: ReadBlob) =
+    let openReadblobAsync (container: BlobContainerClient) (blob: DownloadBlob) =
         Blob.openReadAsync (container.GetBlobClient(blob.Path)) blob
 
-    let openReadBlob (container: BlobContainerClient) (blob: ReadBlob) =
+    let openReadBlob (container: BlobContainerClient) (blob: DownloadBlob) =
         Blob.openRead (container.GetBlobClient(blob.Path)) blob
 
-    let downloadBlobAsync (container: BlobContainerClient) (blob: ReadBlob) =
+    let downloadBlobAsync (container: BlobContainerClient) (blob: DownloadBlob) =
         Blob.downloadAsync (container.GetBlobClient(blob.Path)) blob
 
-    let downloadBlob (container: BlobContainerClient) (blob: ReadBlob) =
+    let downloadBlob (container: BlobContainerClient) (blob: DownloadBlob) =
         Blob.download (container.GetBlobClient(blob.Path)) blob

@@ -31,8 +31,9 @@
   
   <ItemGroup>
     <Compile Include="Teeri.fs" />
-    <Compile Include="BlobBuilder.fs" />
-    <Compile Include="ReadBlobBuilder.fs" />
+    <Compile Include="UploadBlobBuilder.fs" />
+    <Compile Include="DownloadBlobBuilder.fs" />
+    <Compile Include="SasBuilder.fs" />
     <Compile Include="Operations.fs" />
     <None Include="..\..\Logo.png" Pack="true" PackagePath="\"/>
     <None Include="..\..\LICENSE" Pack="true" PackagePath="\"/>

@@ -10,7 +10,7 @@ Teeri is a simple F# wrapper on top of Azure Blob Storage .NET SDK. Teeri aims a
 
 ```fsharp
 // To upload a blob with all the optional settings
-blob ("folder/file.txt", FromStream stream) {
+uploadBlob ("folder/file.txt", FromStream stream) {
     cacheControl "max-age=3600"
     cancellationToken token
     contentDisposition "save_as_name.txt"
@@ -27,11 +27,11 @@ blob ("folder/file.txt", FromStream stream) {
 } |> uploadAsync blobClient
 
 // To upload with the default options
-blob ("folder/file2.txt", FromStream stream) 
+uploadBlobWithDefaults ("folder/file2.txt", FromStream stream) 
 |> uploadAsync blobClient
 
 // To read a blob with all the optional settings
-readBlob "folder/file.txt" {
+downloadBlob "folder/file.txt" {
     position 0L
     bufferSize 100
     requestConditions conditions
@@ -39,7 +39,7 @@ readBlob "folder/file.txt" {
 } |> openReadAsync blobClient
 
 // To read a blob with the default options
-readBlob "folder/file2.txt"
+downloadBlobWithDefaults "folder/file2.txt"
 |> openReadAsync blobClient
 ```
 
@@ -108,7 +108,7 @@ String tuple sequence of tags to set for this block blob. Call this only once in
 
 [Azure.Storage.StorageTransferOptions](https://docs.microsoft.com/en-us/dotnet/api/azure.storage.storagetransferoptions?view=azure-dotnet) to configure parallel transfer behavior. Value is passed to underlying SDK as is.
 
-### Read blob builder
+### Download blob builder
 
 **Mandatory** values:
 
@@ -163,10 +163,6 @@ Synchronous version of `downloadAsync`.
 - `createSharedKeyCredential`
 
 Generates a [StorageSharedKeyCredential](https://docs.microsoft.com/en-us/dotnet/api/azure.storage.storagesharedkeycredential?view=azure-dotnet) object from storage connection string.
-
-- `generateBlobSas`
-
-Generates sas token for a blob.
 
 #### BlobContainerClient operations
 
