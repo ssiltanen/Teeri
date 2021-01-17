@@ -27,7 +27,7 @@ uploadBlob ("folder/file.txt", FromStream stream) {
 } |> uploadAsync blobClient
 
 // To upload with the default options
-uploadBlobWithDefaults ("folder/file2.txt", FromStream stream) 
+uploadBlobWithDefaults "folder/file2.txt" (FromStream stream) 
 |> uploadAsync blobClient
 
 // To read a blob with all the optional settings
