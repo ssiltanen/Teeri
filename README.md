@@ -41,9 +41,27 @@ downloadBlob "folder/file.txt" {
 // To read a blob with the default options
 downloadBlobWithDefaults "folder/file2.txt"
 |> openReadAsync blobClient
+
+// To create sas tokens
+sas (Account BlobAccountSasPermissions.Read) DateTimeOffset.UtcNow {
+    cacheControl "max-age=3600"
+    contentDisposition "save_as_name.txt"
+    contentEncoding UTF8
+    contentLanguage "English"
+    contentType ""
+    correlationId ""
+    identifier ""
+    ipRange range
+    preauthorizedAgentObjectId ""
+    protocol Https
+    startsOn startTime
+}
+
+// To create sas token with default options
+sasWithDefaults (Container ("name", BlobContainerSasPermissions.Read)) DateTimeOffset.UtcNow
 ```
 
-All settings inside the computation expressions are optional, but the parameter values before {} are mandatory.
+All values inside {} are optional, but if you specify none of them, use the builder functions ending with `WithDefaults`.
 
 ## How to use
 
@@ -51,8 +69,13 @@ All settings inside the computation expressions are optional, but the parameter 
 
 **Mandatory** values:
 
-- `path`: File path to upload file to. Does not including the container name.
-- `Content`: File contents, either a stream or string. Type is specified with a union types `FromStream` and `FromString`.
+- `path`
+    
+File path to upload file to. Does not including the container name.
+
+- `Content`
+
+File contents, either a stream or string. Type is specified with a union types `FromStream` and `FromString`.
 
 **Optional** values:
 
@@ -112,7 +135,9 @@ String tuple sequence of tags to set for this block blob. Call this only once in
 
 **Mandatory** values:
 
-- `path`: File path to download file from. Does not including the container name.
+- `path`
+
+File path to download file from. Does not including the container name.
 
 **Optional** values:
 
@@ -131,6 +156,73 @@ Int buffer size to use when the stream downloads parts of the blob. Defaults to 
 - `cancellationToken`
 
 [System.Threading.CancellationToken](https://docs.microsoft.com/en-us/dotnet/api/system.threading.cancellationtoken?view=net-5.0) to propagate notifications that the operation should be cancelled. Value is passed to underlying SDK as is.
+
+### SAS builder
+
+**Mandatory** values:
+
+- `level`
+
+Teeri's own discriminated union determining where sas provides access. Possible values: 
+
+```fsharp
+type SasTarget =
+    | Account of BlobAccountSasPermissions
+    | Container of name: string * BlobContainerSasPermissions
+    | Blob of name: string * BlobSasPermissions
+    | Snapshot of name: string * BlobSasPermissions
+    | BlobVersion of versionId: string * BlobSasPermissions
+```
+
+- `expiresOn`
+
+DateTimeOffset value when sas token will expire.
+
+**Optional** values:
+
+- `cacheControl`
+
+Override the value returned for Cache-Control response header.
+
+- `contentDisposition`
+
+Override the value returned for Content-Disposition response header.
+
+- `contentEncoding`
+
+Override the value returned for Cache-Encoding response header.
+
+- `contentLanguage`
+
+Override the value returned for Cache-Language response header.
+
+- `contentType`
+
+Override the value returned for Cache-Type response header.
+
+- `correlationId`
+
+Beginning in version 2020-02-10, this value will be used for to correlate the storage audit logs with the audit logs used by the principal generating and distributing SAS. This is only used for User Delegation SAS.
+
+- `identifier`
+
+A unique value up to 64 characters in length that correlates to an access policy specified for the container.
+
+- `ipRange`
+
+Specifies an IP address or a range of IP addresses from which to accept requests. If the IP address from which the request originates does not match the IP address or address range specified on the SAS token, the request is not authenticated. When specifying a range of IP addresses, note that the range is inclusive. [SasIPRange](https://docs.microsoft.com/en-us/dotnet/api/azure.storage.sas.sasiprange?view=azure-dotnet).
+
+- `preauthorizedAgentObjectId`
+
+Beginning in version 2020-02-10, this value will be used for the AAD Object ID of a user authorized by the owner of the User Delegation Key to perform the action granted by the SAS. The Azure Storage service will ensure that the owner of the user delegation key has the required permissions before granting access. No additional permission check for the user specified in this value will be performed. This is only used with generating User Delegation SAS.
+
+- `protocol`
+
+The signed protocol field specifies the protocol permitted for a request made with the SAS. Possible values are [HttpsAndHttp, Https, and None](https://docs.microsoft.com/en-us/dotnet/api/azure.storage.sas.sasprotocol?view=azure-dotnet).
+
+- `startsOn`
+
+Specifies the time at which the shared access signature becomes valid. If omitted when DateTimeOffset.MinValue is used, start time for this call is assumed to be the time when the storage service receives the request.
 
 ### Supported operations
 

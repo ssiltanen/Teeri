@@ -47,8 +47,8 @@ type SasBuilder (level: SasTarget, expiresOn: DateTimeOffset) =
 
     /// Override the value returned for Cache-Encoding response header.
     [<CustomOperation"contentEncoding">]
-    member _.ContentEncoding(state: Sas, encoding) =
-        state.Builder.ContentEncoding <- encoding
+    member _.ContentEncoding(state: Sas, encoding: ContentEncoding) =
+        state.Builder.ContentEncoding <- encoding.Value
         state
 
     /// Override the value returned for Cache-Language response header.
@@ -63,41 +63,41 @@ type SasBuilder (level: SasTarget, expiresOn: DateTimeOffset) =
         state.Builder.ContentType <- contentType
         state
 
-    /// Optional. Beginning in version 2020-02-10, this value will be used for to correlate the storage audit logs with the audit logs used by the principal generating and distributing SAS. This is only used for User Delegation SAS.
+    /// Beginning in version 2020-02-10, this value will be used for to correlate the storage audit logs with the audit logs used by the principal generating and distributing SAS. This is only used for User Delegation SAS.
     [<CustomOperation"correlationId">]
     member _.CorrelationId(state: Sas, correlationId) =
         state.Builder.CorrelationId <- correlationId
         state
 
-    /// An optional unique value up to 64 characters in length that correlates to an access policy specified for the container.
+    /// A unique value up to 64 characters in length that correlates to an access policy specified for the container.
     [<CustomOperation"identifier">]
     member _.Identifier(state: Sas, identifier) =
         state.Builder.Identifier <- identifier
         state
 
-    /// Specifies an IP address or a range of IP addresses from which to accept requests. If the IP address from which the request originates does not match the IP address or address range specified on the SAS token, the request is not authenticated. When specifying a range of IP addresses, note that the range is inclusive.
+    /// Specifies an IP address or a range of IP addresses from which to accept requests. If the IP address from which the request originates does not match the IP address or address range specified on the SAS token, the request is not authenticated. When specifying a range of IP addresses, note that the range is inclusive. Azure.Storage.Sas.SasIPRange.
     [<CustomOperation"ipRange">]
     member _.IPRange(state: Sas, ipRange) =
         state.Builder.IPRange <- ipRange
         state
 
-    /// Optional. Beginning in version 2020-02-10, this value will be used for the AAD Object ID of a user authorized by the owner of the User Delegation Key to perform the action granted by the SAS. The Azure Storage service will ensure that the owner of the user delegation key has the required permissions before granting access. No additional permission check for the user specified in this value will be performed. This is only used with generating User Delegation SAS.
+    /// Beginning in version 2020-02-10, this value will be used for the AAD Object ID of a user authorized by the owner of the User Delegation Key to perform the action granted by the SAS. The Azure Storage service will ensure that the owner of the user delegation key has the required permissions before granting access. No additional permission check for the user specified in this value will be performed. This is only used with generating User Delegation SAS.
     [<CustomOperation"preauthorizedAgentObjectId">]
     member _.PreauthorizedAgentObjectId(state: Sas, objectId) =
         state.Builder.PreauthorizedAgentObjectId <- objectId
         state
 
-    /// The optional signed protocol field specifies the protocol permitted for a request made with the SAS. Possible values are Azure.Storage.Sas.SasProtocol.HttpsAndHttp, Azure.Storage.Sas.SasProtocol.Https, and Azure.Storage.Sas.SasProtocol.None.
+    /// The signed protocol field specifies the protocol permitted for a request made with the SAS. Possible values are Azure.Storage.Sas.SasProtocol.HttpsAndHttp, Azure.Storage.Sas.SasProtocol.Https, and Azure.Storage.Sas.SasProtocol.None.
     [<CustomOperation"protocol">]
     member _.Protocol(state: Sas, protocol) =
         state.Builder.Protocol <- protocol
         state
 
-    /// Optionally specify the time at which the shared access signature becomes valid. If omitted when DateTimeOffset.MinValue is used, start time for this call is assumed to be the time when the storage service receives the request.
+    /// Specifies the time at which the shared access signature becomes valid. If omitted when DateTimeOffset.MinValue is used, start time for this call is assumed to be the time when the storage service receives the request.
     [<CustomOperation"startsOn">]
     member _.StartsOn(state: Sas, startsOn) =
         state.Builder.StartsOn <- startsOn
         state
 
 let sas target expiresOn = SasBuilder(target, expiresOn)
-let sasWithDefaults = sas (Account BlobAccountSasPermissions.Add) DateTimeOffset.UtcNow {()}
+let sasWithDefaults target expiresOn = sas target expiresOn {()}
