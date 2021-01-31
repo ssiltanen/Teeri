@@ -9,6 +9,8 @@ Teeri is a simple F# wrapper on top of Azure Blob Storage .NET SDK. Teeri aims a
 ## Overview of supported settings
 
 ```fsharp
+open Teeri
+
 // To upload a blob with all the optional settings
 uploadBlob ("folder/file.txt", FromStream stream) {
     cacheControl "max-age=3600"
@@ -24,11 +26,11 @@ uploadBlob ("folder/file.txt", FromStream stream) {
     progressHandler iprogress
     tags [ "tag1", "value"; "tag2", "value" ]
     transferOptions transferOptions
-} |> uploadAsync blobClient
+} |> Blob.uploadAsync blobClient
 
 // To upload with the default options
 uploadBlobWithDefaults "folder/file2.txt" (FromStream stream) 
-|> uploadAsync blobClient
+|> Blob.uploadAsync blobClient
 
 // To read a blob with all the optional settings
 downloadBlob "folder/file.txt" {
@@ -36,11 +38,11 @@ downloadBlob "folder/file.txt" {
     bufferSize 100
     requestConditions conditions
     cancellationToken token
-} |> openReadAsync blobClient
+} |> Blob.openReadAsync blobClient
 
 // To read a blob with the default options
 downloadBlobWithDefaults "folder/file2.txt"
-|> openReadAsync blobClient
+|> Blob.openReadAsync blobClient
 
 // To create sas tokens
 sas (Account BlobAccountSasPermissions.Read) DateTimeOffset.UtcNow {
@@ -55,10 +57,11 @@ sas (Account BlobAccountSasPermissions.Read) DateTimeOffset.UtcNow {
     preauthorizedAgentObjectId ""
     protocol Https
     startsOn startTime
-}
+} |> Sas.toQueryParameters (sharedKeyCredential "<connection string>")
 
 // To create sas token with default options
 sasWithDefaults (Container ("name", BlobContainerSasPermissions.Read)) DateTimeOffset.UtcNow
+|> Sas.toQueryParameters (sharedKeyCredential "<connection string>")
 ```
 
 All values inside {} are optional, but if you specify none of them, use the builder functions ending with `WithDefaults`.
@@ -252,10 +255,6 @@ Downloads blob contents to string. Uses blob's content encoding value in decodin
 
 Synchronous version of `downloadAsync`.
 
-- `createSharedKeyCredential`
-
-Generates a [StorageSharedKeyCredential](https://docs.microsoft.com/en-us/dotnet/api/azure.storage.storagesharedkeycredential?view=azure-dotnet) object from storage connection string.
-
 #### BlobContainerClient operations
 
 - `uploadBlobAsync`
@@ -281,6 +280,16 @@ Downloads blob contents to string. Uses blob's content encoding value in decodin
 - `downloadBlob`
 
 Synchronous version of `downloadBlobAsync`.
+
+#### Sas operations
+
+- `sharedKeyCredential`
+
+Generates a [StorageSharedKeyCredential](https://docs.microsoft.com/en-us/dotnet/api/azure.storage.storagesharedkeycredential?view=azure-dotnet) object from storage connection string.
+
+- `toSasQueryParameters`
+
+Builds sas query parameters string from [StorageSharedKeyCredential](https://docs.microsoft.com/en-us/dotnet/api/azure.storage.storagesharedkeycredential?view=azure-dotnet) and Sas.
 
 ## Help! Teeri does not support my use case
 

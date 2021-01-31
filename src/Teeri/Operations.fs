@@ -54,13 +54,13 @@ module Blob =
         |> Async.AwaitTask
         |> Async.RunSynchronously
 
-    let openReadAsync (client : BlobClient) (blob : DownloadBlob) =
+    let openReadAsync (client: BlobClient) (blob: DownloadBlob) =
         client.OpenReadAsync(blob.Position, (Option.toNullable blob.BufferSize), blob.BlobRequestConditions, blob.CancellationToken)
 
-    let openRead (client : BlobClient) (blob : DownloadBlob) =
+    let openRead (client: BlobClient) (blob: DownloadBlob) =
         client.OpenRead(blob.Position, (Option.toNullable blob.BufferSize), blob.BlobRequestConditions, blob.CancellationToken)
 
-    let downloadAsync (client : BlobClient) (blob : DownloadBlob) =
+    let downloadAsync (client: BlobClient) (blob: DownloadBlob) =
         task {
             let! properties = client.GetPropertiesAsync(blob.BlobRequestConditions, blob.CancellationToken)
             let encoding =
@@ -81,27 +81,10 @@ module Blob =
             return content
         }
 
-    let download (client : BlobClient) (blob : DownloadBlob) =
+    let download (client: BlobClient) (blob: DownloadBlob) =
         downloadAsync client blob
         |> Async.AwaitTask
         |> Async.RunSynchronously
-
-    module Sas =
-
-        let createSharedKeyCredential (connectionString: string) =
-            let connStringPairs =
-                connectionString.Split ';'
-                |> Array.map (fun pair ->
-                    match pair.Split '=' with
-                    | [| name; value |] -> name, value
-                    | _ -> failwith "Invalid connection string value pair")
-
-            let getValue key =
-                connStringPairs
-                |> Array.tryPick (fun (name,value) -> if name = key then Some value else None)
-                |> Option.defaultWith (fun _ -> failwithf "Key %s was not found from connection string" key)
-
-            StorageSharedKeyCredential(getValue "AccountName", getValue "AccountKey")
 
 module Container =
 
@@ -132,3 +115,23 @@ module Container =
 
     let downloadBlob (container: BlobContainerClient) (blob: DownloadBlob) =
         Blob.download (container.GetBlobClient(blob.Path)) blob
+
+module Sas =
+
+    let sharedKeyCredential (connectionString: string) =
+        let connStringPairs =
+            connectionString.Split ';'
+            |> Array.map (fun pair ->
+                match pair.Split '=' with
+                | [| name; value |] -> name, value
+                | _ -> failwith "Invalid connection string value pair")
+
+        let getValue key =
+            connStringPairs
+            |> Array.tryPick (fun (name,value) -> if name = key then Some value else None)
+            |> Option.defaultWith (fun _ -> failwithf "Key %s was not found from connection string" key)
+
+        StorageSharedKeyCredential(getValue "AccountName", getValue "AccountKey")
+
+    let toSasQueryParameters (cred: StorageSharedKeyCredential) (sas: Sas) =
+        sas.Builder.ToSasQueryParameters(cred).ToString()
