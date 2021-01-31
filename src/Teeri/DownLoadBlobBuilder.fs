@@ -13,8 +13,7 @@ type DownloadBlobBuilder (path: string) =
           BlobRequestConditions = BlobRequestConditions()
           CancellationToken = CancellationToken.None }
 
-    member this.Zero() =
-        this.Yield()
+    member this.Zero() = this.Yield()
 
     /// The buffer size to use when the stream downloads parts of the blob. Defaults to 1 MB.
     [<CustomOperation"bufferSize">]
